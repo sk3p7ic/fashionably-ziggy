@@ -3,6 +3,7 @@ const Allocator = std.mem.Allocator;
 
 pub const MatrixError = error{
     IndexOutOfBounds,
+    ShapeMismatch,
 };
 
 pub fn Matrix(comptime T: type) type {
@@ -72,6 +73,22 @@ pub fn Matrix(comptime T: type) type {
             }
             return mtx;
         }
+
+        pub fn dot(self: Self, mtx_b: Matrix(T)) !Self {
+            if (self.cols != mtx_b.rows) {
+                return MatrixError.ShapeMismatch;
+            }
+            const prod = try Matrix(T).init(self.rows, mtx_b.cols, self.allocator);
+            prod.fill(0);
+            for (0..self.rows) |i| {
+                for (0..self.cols) |k| {
+                    for (0..mtx_b.cols) |j| {
+                        (try prod.at(i, j)).* += (try self.at(i, k)).* * (try mtx_b.at(k, j)).*;
+                    }
+                }
+            }
+            return prod;
+        }
     };
 }
 
@@ -109,4 +126,25 @@ test "Can transpose a Matrix" {
     for (0..expected.len) |i| {
         try std.testing.expect(expected[i] == mtx2.items[i]);
     }
+}
+
+test "Can perform dot product of two matrices." {
+    const allocator = std.testing.allocator;
+    const mtx1 = try Matrix(u8).init(2, 3, allocator);
+    defer mtx1.deinit();
+    const mtx2 = try Matrix(u8).init(3, 1, allocator);
+    defer mtx2.deinit();
+    try mtx1.insertRowConst(&[3]u8{ 1, 2, 3 }, 0);
+    try mtx1.insertRowConst(&[3]u8{ 4, 5, 6 }, 1);
+    (try mtx2.at(0, 0)).* = 7;
+    (try mtx2.at(1, 0)).* = 8;
+    (try mtx2.at(2, 0)).* = 9;
+    // Test if dot product works for happy case
+    const mtx3 = try mtx1.dot(mtx2);
+    defer mtx3.deinit();
+    try std.testing.expect((try mtx3.at(0, 0)).* == 50);
+    try std.testing.expect((try mtx3.at(1, 0)).* == 122);
+    // Test if dot product can detect shape mismatches
+    const mtx4 = mtx1.dot(mtx3);
+    try std.testing.expectError(MatrixError.ShapeMismatch, mtx4);
 }
