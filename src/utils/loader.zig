@@ -56,3 +56,10 @@ pub fn read_train_file(allocator: std.mem.Allocator) !Dataset {
     }
     return dataset;
 }
+
+test "Can read and parse training file" {
+    const allocator = std.testing.allocator;
+    const data = try read_train_file(allocator);
+    defer data.items.deinit();
+    defer data.labels.deinit();
+}
