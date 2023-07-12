@@ -128,6 +128,19 @@ pub fn Matrix(comptime T: type) type {
     };
 }
 
+pub fn IdentityMatrix(comptime T: type, n: usize, allocator: Allocator) !Matrix(T) {
+    const ident = try Matrix(T).init(n, n, allocator);
+    ident.fill(0);
+    for (0..n) |r| {
+        for (0..n) |c| {
+            if (r == c) {
+                (try ident.at(r, c)).* = 1;
+            }
+        }
+    }
+    return ident;
+}
+
 test "Can alloc / dealloc Matrix" {
     const allocator = std.testing.allocator;
     const mtx = try Matrix(f32).init(2, 2, allocator);
@@ -215,4 +228,17 @@ test "Matrix addition and subtraction works" {
     defer sub_res.deinit();
     try std.testing.expect(sum_mtx.equivCheck(sum_res));
     try std.testing.expect(mtx1.equivCheck(sub_res));
+}
+
+test "Can make Identity Matrix" {
+    const allocator = std.testing.allocator;
+    const ident = try IdentityMatrix(u8, 3, allocator);
+    defer ident.deinit();
+    const comparison_ident = try Matrix(u8).init(3, 3, allocator);
+    defer comparison_ident.deinit();
+    comparison_ident.fill(0);
+    comparison_ident.items[0] = 1;
+    comparison_ident.items[4] = 1;
+    comparison_ident.items[8] = 1;
+    try std.testing.expect(ident.equivCheck(comparison_ident));
 }
