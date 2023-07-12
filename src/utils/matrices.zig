@@ -44,6 +44,20 @@ pub fn Matrix(comptime T: type) type {
             }
         }
 
+        pub fn frand(self: Self, seed: u64) void {
+            const Prng = std.rand.DefaultPrng;
+            var rnd = Prng.init(seed);
+            for (0..self.items.len) |i| {
+                const rand = rnd.random().int(u64);
+                self.items[i] = switch (T) {
+                    f16 => @as(f16, @floatFromInt(rand)),
+                    f32 => @as(f32, @floatFromInt(rand)),
+                    f64 => @as(f64, @floatFromInt(rand)),
+                    else => @as(T, @truncate(rand)),
+                };
+            }
+        }
+
         pub fn insertRowConst(self: Self, row: []const T, index: usize) MatrixError!void {
             if (index >= self.rows) {
                 return MatrixError.IndexOutOfBounds;
@@ -274,4 +288,14 @@ test "Can subdivide matrices" {
     const mtx2 = try mtx1.subdivide(2, 2, 0, 0);
     defer mtx2.deinit();
     try std.testing.expect(comp_mtx.equivCheck(mtx2));
+}
+
+test "Can fill Matrix with random numbers" {
+    const allocator = std.testing.allocator;
+    const mtx1 = try Matrix(u8).init(3, 3, allocator);
+    defer mtx1.deinit();
+    const mtx2 = try Matrix(f32).init(3, 3, allocator);
+    defer mtx2.deinit();
+    mtx1.frand(0);
+    mtx2.frand(0);
 }
