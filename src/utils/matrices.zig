@@ -125,6 +125,22 @@ pub fn Matrix(comptime T: type) type {
             }
             return true;
         }
+
+        pub fn subdivide(self: Self, rows: usize, cols: usize, row_start: usize, col_start: usize) !Self {
+            if (rows > self.rows or cols > self.cols) {
+                return MatrixError.ShapeMismatch;
+            }
+            if (row_start >= self.rows or col_start >= self.cols) {
+                return MatrixError.IndexOutOfBounds;
+            }
+            const mtx = try Matrix(T).init(rows, cols, self.allocator);
+            for (row_start..rows) |r| {
+                for (col_start..cols) |c| {
+                    (try mtx.at(r, c)).* = (try self.at(r, c)).*;
+                }
+            }
+            return mtx;
+        }
     };
 }
 
@@ -241,4 +257,21 @@ test "Can make Identity Matrix" {
     comparison_ident.items[4] = 1;
     comparison_ident.items[8] = 1;
     try std.testing.expect(ident.equivCheck(comparison_ident));
+}
+
+test "Can subdivide matrices" {
+    const allocator = std.testing.allocator;
+    const mtx1 = try Matrix(u8).init(4, 4, allocator);
+    defer mtx1.deinit();
+    try mtx1.insertRowConst(&[_]u8{ 2, 2, 4, 4 }, 0);
+    try mtx1.insertRowConst(&[_]u8{ 2, 2, 4, 4 }, 1);
+    try mtx1.insertRowConst(&[_]u8{ 4, 4, 4, 4 }, 2);
+    try mtx1.insertRowConst(&[_]u8{ 4, 4, 4, 4 }, 3);
+    const comp_mtx = try Matrix(u8).init(2, 2, allocator);
+    defer comp_mtx.deinit();
+    try comp_mtx.insertRowConst(&[_]u8{ 2, 2 }, 0);
+    try comp_mtx.insertRowConst(&[_]u8{ 2, 2 }, 1);
+    const mtx2 = try mtx1.subdivide(2, 2, 0, 0);
+    defer mtx2.deinit();
+    try std.testing.expect(comp_mtx.equivCheck(mtx2));
 }
