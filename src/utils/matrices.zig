@@ -43,6 +43,16 @@ pub fn Matrix(comptime T: type) type {
             }
         }
 
+        pub fn insertRowConst(self: Self, row: []const T, index: usize) MatrixError!void {
+            if (index >= self.rows) {
+                return MatrixError.IndexOutOfBounds;
+            }
+            for (0..row.len) |c| {
+                const ptr = try self.at(index, c);
+                ptr.* = row[c];
+            }
+        }
+
         pub fn insertRow(self: Self, row: []T, index: usize) MatrixError!void {
             if (index >= self.rows) {
                 return MatrixError.IndexOutOfBounds;
@@ -51,6 +61,16 @@ pub fn Matrix(comptime T: type) type {
                 const ptr = try self.at(index, c);
                 ptr.* = row[c];
             }
+        }
+
+        pub fn transpose(self: Self) !Self {
+            var mtx = try Matrix(T).init(self.cols, self.rows, self.allocator);
+            for (0..self.rows) |c| {
+                for (0..self.cols) |r| {
+                    (try mtx.at(r, c)).* = (try self.at(c, r)).*;
+                }
+            }
+            return mtx;
         }
     };
 }
@@ -66,11 +86,27 @@ test "Can insert row into Matrix" {
     const mtx = try Matrix(u8).init(3, 4, allocator);
     defer mtx.deinit();
     mtx.fill(0);
-    var items = [_]u8{ 1, 2, 3, 4 };
-    var all_test_items = [_]u8{ 0, 0, 0, 0, 1, 2, 3, 4, 0, 0, 0, 0 };
-    try mtx.insertRow(&items, 1);
+    const items = [_]u8{ 1, 2, 3, 4 };
+    const all_test_items = [_]u8{ 0, 0, 0, 0, 1, 2, 3, 4, 0, 0, 0, 0 };
+    try mtx.insertRowConst(&items, 1);
     const mtx_items = mtx.items;
     for (0..all_test_items.len) |i| {
         try std.testing.expect(all_test_items[i] == mtx_items[i]);
+    }
+}
+
+test "Can transpose a Matrix" {
+    const allocator = std.testing.allocator;
+    const mtx1 = try Matrix(u8).init(2, 3, allocator);
+    defer mtx1.deinit();
+    const r1 = [_]u8{ 1, 2, 3 };
+    const r2 = [_]u8{ 4, 5, 6 };
+    try mtx1.insertRowConst(&r1, 0);
+    try mtx1.insertRowConst(&r2, 1);
+    const mtx2 = try mtx1.transpose();
+    defer mtx2.deinit();
+    const expected = [_]u8{ 1, 4, 2, 5, 3, 6 };
+    for (0..expected.len) |i| {
+        try std.testing.expect(expected[i] == mtx2.items[i]);
     }
 }
