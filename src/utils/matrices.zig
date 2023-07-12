@@ -89,6 +89,42 @@ pub fn Matrix(comptime T: type) type {
             }
             return prod;
         }
+
+        pub fn sum(self: Self, mtx_b: Matrix(T)) !Self {
+            if (self.rows != mtx_b.rows or self.cols != mtx_b.cols) {
+                return MatrixError.ShapeMismatch;
+            }
+            const mtx = try Matrix(T).init(self.rows, self.cols, self.allocator);
+            for (self.items, 0..) |e, i| {
+                mtx.items[i] = e + mtx_b.items[i];
+            }
+            return mtx;
+        }
+
+        pub fn sub(self: Self, mtx_b: Matrix(T)) !Self {
+            if (self.rows != mtx_b.rows or self.cols != mtx_b.cols) {
+                return MatrixError.ShapeMismatch;
+            }
+            const mtx = try Matrix(T).init(self.rows, self.cols, self.allocator);
+            for (self.items, 0..) |e, i| {
+                mtx.items[i] = e - mtx_b.items[i];
+            }
+            return mtx;
+        }
+
+        pub fn equivCheck(self: Self, mtx_b: Matrix(T)) bool {
+            // Check shape
+            if (self.rows != mtx_b.rows or self.cols != mtx_b.cols) {
+                return false;
+            }
+            // Check elements
+            for (self.items, 0..) |e, i| {
+                if (e != mtx_b.items[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
     };
 }
 
@@ -147,4 +183,36 @@ test "Can perform dot product of two matrices." {
     // Test if dot product can detect shape mismatches
     const mtx4 = mtx1.dot(mtx3);
     try std.testing.expectError(MatrixError.ShapeMismatch, mtx4);
+}
+
+test "Equivalency check for matrices" {
+    const allocator = std.testing.allocator;
+    const mtx1 = try Matrix(u16).init(3, 3, allocator);
+    defer mtx1.deinit();
+    const mtx2 = try Matrix(u16).init(3, 3, allocator);
+    defer mtx2.deinit();
+    mtx1.fill(69);
+    mtx2.fill(69);
+    try std.testing.expect(mtx1.equivCheck(mtx2));
+    mtx2.items[7] = 420; // Change an element
+    try std.testing.expect(!mtx2.equivCheck(mtx1));
+}
+
+test "Matrix addition and subtraction works" {
+    const allocator = std.testing.allocator;
+    const mtx1 = try Matrix(u8).init(3, 3, allocator);
+    defer mtx1.deinit();
+    const mtx2 = try Matrix(u8).init(3, 3, allocator);
+    defer mtx2.deinit();
+    const sum_mtx = try Matrix(u8).init(3, 3, allocator);
+    defer sum_mtx.deinit();
+    mtx1.fill(1);
+    mtx2.fill(2);
+    sum_mtx.fill(3);
+    const sum_res = try mtx1.sum(mtx2);
+    defer sum_res.deinit();
+    const sub_res = try sum_mtx.sub(mtx2);
+    defer sub_res.deinit();
+    try std.testing.expect(sum_mtx.equivCheck(sum_res));
+    try std.testing.expect(mtx1.equivCheck(sub_res));
 }
