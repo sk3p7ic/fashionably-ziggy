@@ -23,6 +23,8 @@ This project is a work in progress. The goals of this project are:
 - To serve as a supplement to the Machine Learning and Artificial Intelligence course that I am taking at Texas A&M University - San Antonio.
 - To improve my Zig skills.
 
+**For now, this project is not in development. I've run into issues with the type system that I must first learn to resolve.**
+
 ## Usage
 
 ### Prerequisites
