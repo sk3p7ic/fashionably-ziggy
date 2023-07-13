@@ -4,7 +4,7 @@ const ufuncs = @import("ufuncs.zig");
 const Allocator = std.mem.Allocator;
 const Matrix = matrices.Matrix;
 
-pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) type) type {
+pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) void) type {
     return struct {
         const Self = @This();
 
@@ -36,13 +36,7 @@ pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) typ
             defer p.deinit();
             const s = try p.sumWithVec(self.biases);
             defer s.deinit();
-            for (0..s.rows) |r| {
-                for (0..s.cols) |c| {
-                    const ptr = try s.at(r, c);
-                    const act = F(T, ptr.*);
-                    ptr.* = act;
-                }
-            }
+            F(T, &s); // Activation function
             return s;
         }
     };
