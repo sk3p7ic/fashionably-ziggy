@@ -1,5 +1,7 @@
 const std = @import("std");
 const loader = @import("./utils/loader.zig");
+const neunet = @import("./nn/neunet.zig");
+const ufuncs = @import("./nn/ufuncs.zig");
 
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
@@ -38,4 +40,6 @@ pub fn main() !void {
         try stdout.print("Divided (Took {d} seconds):\n  Train Items: {s}\n  Train Labels: {s}\n  Test Items: {s}\n  Tests Labels: {s}\n", .{ time_taken, trnis, trnls, tstis, tstls });
         try bw.flush();
     }
+    const nn = neunet.NN(f32).init([2]ufuncs.ActivationFunctionTag{ .relu, .softmax }, allocator);
+    _ = nn;
 }

@@ -4,6 +4,24 @@ const ufuncs = @import("ufuncs.zig");
 const Allocator = std.mem.Allocator;
 const Matrix = matrices.Matrix;
 
+pub fn ForwardResult(comptime T: type) type {
+    return struct {
+        const Self = @This();
+
+        A: Matrix(T),
+        Z: Matrix(T),
+
+        pub fn init(A: Matrix(T), Z: Matrix(T)) !Self {
+            return Self{ .A = try A.subdivide(A.rows, A.cols, 0, 0), .Z = try Z.subdivide(Z.rows, Z.cols, 0, 0) };
+        }
+
+        pub fn deinit(self: Self) void {
+            self.A.deinit();
+            self.Z.deinit();
+        }
+    };
+}
+
 pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) void) type {
     return struct {
         const Self = @This();
@@ -28,16 +46,18 @@ pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) voi
             self.biases.deinit();
         }
 
-        pub fn forward(self: Self, A: Matrix(T)) !Matrix(T) {
+        pub fn forward(self: Self, A: Matrix(T)) !ForwardResult(T) {
             if (A.rows != self.weights.cols) {
                 return matrices.MatrixError.ShapeMismatch;
             }
             const p = try self.weights.dot(A);
             defer p.deinit();
             const s = try p.sumWithVec(self.biases);
+            const a = try s.subdivide(s.rows, s.cols, 0, 0); // Copy s
             defer s.deinit();
-            F(T, &s); // Activation function
-            return s;
+            defer a.deinit();
+            F(T, &a); // Activation function
+            return try ForwardResult(T).init(a, s);
         }
     };
 }
