@@ -22,7 +22,7 @@ pub fn ForwardResult(comptime T: type) type {
     };
 }
 
-pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) void) type {
+pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) matrices.MatrixError!void) type {
     return struct {
         const Self = @This();
 
@@ -56,7 +56,7 @@ pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) voi
             const a = try s.subdivide(s.rows, s.cols, 0, 0); // Copy s
             defer s.deinit();
             defer a.deinit();
-            F(T, &a); // Activation function
+            try F(T, &a); // Activation function
             return try ForwardResult(T).init(a, s);
         }
     };

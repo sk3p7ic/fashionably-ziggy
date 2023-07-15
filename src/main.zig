@@ -1,7 +1,6 @@
 const std = @import("std");
 const loader = @import("./utils/loader.zig");
 const neunet = @import("./nn/neunet.zig");
-const ufuncs = @import("./nn/ufuncs.zig");
 
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
@@ -32,7 +31,7 @@ pub fn main() !void {
     const test_labels = try (try data.labels.subdivide(50000, 1, 10000, 0)).transpose();
     defer test_labels.deinit();
     {
-        const time_taken = timer.read() / std.time.ns_per_s;
+        const time_taken = timer.lap() / std.time.ns_per_s;
         const trnis = try train_items.sizeAsStr();
         const trnls = try train_labels.sizeAsStr();
         const tstis = try test_items.sizeAsStr();
@@ -40,6 +39,11 @@ pub fn main() !void {
         try stdout.print("Divided (Took {d} seconds):\n  Train Items: {s}\n  Train Labels: {s}\n  Test Items: {s}\n  Tests Labels: {s}\n", .{ time_taken, trnis, trnls, tstis, tstls });
         try bw.flush();
     }
-    const nn = neunet.NN(f32).init([2]ufuncs.ActivationFunctionTag{ .relu, .softmax }, allocator);
-    _ = nn;
+    const nn = neunet.NN(f32).init(allocator);
+    _ = try nn.forward(train_items);
+    {
+        const time_taken = timer.lap() / std.time.ns_per_s;
+        try stdout.print("One forward propegation finished in {d} seconds.", .{time_taken});
+        try bw.flush();
+    }
 }

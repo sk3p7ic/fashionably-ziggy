@@ -133,7 +133,7 @@ pub fn Matrix(comptime T: type) type {
             const mtx = try Matrix(T).init(self.rows, self.cols, self.allocator);
             for (0..self.rows) |r| {
                 for (0..self.cols) |c| {
-                    (try mtx.at(r, c)).* = (try self.at(r, c)).* + (try mtx_b.at(c, 0)).*;
+                    (try mtx.at(r, c)).* = (try self.at(r, c)).* + (try mtx_b.at(r, 0)).*;
                 }
             }
             return mtx;

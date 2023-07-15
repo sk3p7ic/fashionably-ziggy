@@ -6,7 +6,6 @@ const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
 const LinearLayer = nn_layers.LinearLayer;
 const Matrix = matrices.Matrix;
-const ActivationFuncTag = nn_funcs.ActivationFunctionTag;
 
 pub fn NNForwardResult(comptime T: type) type {
     return struct {
@@ -37,11 +36,10 @@ pub fn NN(comptime T: type) type {
         const Self = @This();
 
         allocator: Allocator,
-        layer_activations: [2]ActivationFuncTag,
 
-        pub fn init(act_funcs: [2]ActivationFuncTag, allocator: Allocator) Self {
+        pub fn init(allocator: Allocator) Self {
             // TODO: Maybe allow user to pass in arbitrary num of layers?
-            return Self{ .allocator = allocator, .layer_activations = act_funcs };
+            return Self{ .allocator = allocator };
         }
 
         pub fn deinit(self: Self) void {
@@ -52,8 +50,8 @@ pub fn NN(comptime T: type) type {
         }
 
         pub fn forward(self: Self, A: Matrix(T)) !NNForwardResult(T) {
-            const Lyr1 = try LinearLayer(T, nn_funcs.get_activation_fn(self.layer_activations[0])).init(86, 784, self.allocator);
-            const Lyr2 = try LinearLayer(T, nn_funcs.get_activation_fn(self.layer_activations[1])).init(10, 784, self.allocator);
+            const Lyr1 = try LinearLayer(T, nn_funcs.relu_activation).init(86, 784, self.allocator);
+            const Lyr2 = try LinearLayer(T, nn_funcs.softmax_activation).init(10, 86, self.allocator);
             const layer1 = try Lyr1.forward(A);
             defer layer1.deinit();
             const layer2 = try Lyr2.forward(layer1.A);
