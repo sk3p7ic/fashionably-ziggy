@@ -104,6 +104,14 @@ pub fn Matrix(comptime T: type) type {
             return prod;
         }
 
+        pub fn scalarMult(self: Self, scalar: T) !Self {
+            const prod = try Matrix(T).init(self.rows, self.cols, self.allocator);
+            for (self.items, 0..) |e, i| {
+                prod.items[i] = e * scalar;
+            }
+            return prod;
+        }
+
         pub fn sum(self: Self, mtx_b: Matrix(T)) !Self {
             if (self.rows != mtx_b.rows or self.cols != mtx_b.cols) {
                 return MatrixError.ShapeMismatch;

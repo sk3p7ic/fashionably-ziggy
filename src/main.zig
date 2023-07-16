@@ -39,11 +39,11 @@ pub fn main() !void {
         try stdout.print("Divided (Took {d} seconds):\n  Train Items: {s}\n  Train Labels: {s}\n  Test Items: {s}\n  Tests Labels: {s}\n", .{ time_taken, trnis, trnls, tstis, tstls });
         try bw.flush();
     }
-    const nn = neunet.NN(f32).init(allocator);
-    _ = try nn.forward(train_items);
+    const nn = try neunet.NN(f32).init(allocator);
+    const scores = try nn.train(&train_items, &train_labels, 5, std.math.exp(-2.0));
     {
         const time_taken = timer.lap() / std.time.ns_per_s;
-        try stdout.print("One forward propegation finished in {d} seconds.", .{time_taken});
+        try stdout.print("Finished in {d} seconds.\nScores:\n  {any}", .{ time_taken, scores });
         try bw.flush();
     }
 }

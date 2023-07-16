@@ -46,11 +46,11 @@ pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) mat
             self.biases.deinit();
         }
 
-        pub fn forward(self: Self, A: Matrix(T)) !ForwardResult(T) {
+        pub fn forward(self: Self, A: *const Matrix(T)) !ForwardResult(T) {
             if (A.rows != self.weights.cols) {
                 return matrices.MatrixError.ShapeMismatch;
             }
-            const p = try self.weights.dot(A);
+            const p = try self.weights.dot(A.*);
             defer p.deinit();
             const s = try p.sumWithVec(self.biases);
             const a = try s.subdivide(s.rows, s.cols, 0, 0); // Copy s
@@ -58,6 +58,15 @@ pub fn LinearLayer(comptime T: type, comptime F: fn (comptime type, anytype) mat
             defer a.deinit();
             try F(T, &a); // Activation function
             return try ForwardResult(T).init(a, s);
+        }
+
+        pub fn update(self: Self, weights: *const Matrix(T), biases: *const Matrix(T)) void {
+            for (0..weights.len) |i| {
+                self.weights[i] = weights.*[i];
+            }
+            for (0..biases.len) |i| {
+                self.biases[i] = biases.*[i];
+            }
         }
     };
 }

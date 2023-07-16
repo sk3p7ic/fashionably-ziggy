@@ -8,7 +8,7 @@ const FILE_PATH = "dataset/fashion-mnist.csv";
 pub const Datapoint = struct { value: [784]u8, label: u8 };
 
 /// Stores the dataset, separated by items and their labels.
-pub const Dataset = struct { items: Matrix(f32), labels: Matrix(u8) };
+pub const Dataset = struct { items: Matrix(f32), labels: Matrix(f32) };
 
 /// Reads the input dataset and converts it into a dataset.
 pub fn read_train_file(allocator: std.mem.Allocator) !Dataset {
@@ -42,7 +42,7 @@ pub fn read_train_file(allocator: std.mem.Allocator) !Dataset {
     std.rand.Random.shuffle(rng.random(), Datapoint, data);
     // Convert the list of Datapoints into a Dataset
     const dataset_items = try Matrix(f32).init(n_datapoints, 784, allocator);
-    const dataset_labels = try Matrix(u8).init(n_datapoints, 1, allocator);
+    const dataset_labels = try Matrix(f32).init(n_datapoints, 1, allocator);
     var dataset = Dataset{ .items = dataset_items, .labels = dataset_labels };
     for (0..data.len) |i| {
         // Convert attributes from u8 to f32
@@ -52,7 +52,7 @@ pub fn read_train_file(allocator: std.mem.Allocator) !Dataset {
         }
         // Add to matrix
         try dataset.items.insertRow(&values, i);
-        (try dataset.labels.at(i, 0)).* = data[i].label;
+        (try dataset.labels.at(i, 0)).* = @as(f32, @floatFromInt(data[i].label));
     }
     return dataset;
 }
