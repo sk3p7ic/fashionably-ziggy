@@ -14,3 +14,4 @@ docgen_tmp/
 
 dataset/*
 !dataset/download.py
+!dataset/requirements.txt
