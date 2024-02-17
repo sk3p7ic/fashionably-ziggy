@@ -13,5 +13,5 @@ docgen_tmp/
 # End of https://www.toptal.com/developers/gitignore/api/zig
 
 dataset/*
-!dataset/download.py
+!dataset/prepare.py
 !dataset/requirements.txt

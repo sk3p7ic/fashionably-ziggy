@@ -2,6 +2,8 @@
 
 _A neural network written in Zig to classify fashion items from the Fashion MNIST dataset._
 
+![GitHub license](https://img.shields.io/github/license/sk3p7ic/fashionably-ziggy)
+
 <details><summary>Table of Contents</summary><p>
 
 - [About this Project](#about-this-project)
@@ -14,6 +16,9 @@ _A neural network written in Zig to classify fashion items from the Fashion MNIS
 
 ## About this Project
 
+<img src="https://raw.githubusercontent.com/ziglang/logo/master/ziggy.svg"
+  alt="Ziggy the Ziguana" width="25%" align="right" />
+
 This project is a neural network written in Zig to classify fashion items from the Fashion MNIST dataset. It is a work in progress. The [Fashion MNIST dataset](https://github.com/zolandoresearch/fashion-mnist) is a drop-in replacement for the [MNIST dataset](http://yann.lecun.com/exdb/mnist/) of handwritten digits. It is intended to serve as a direct comparison for machine learning algorithms.
 
 This project is a work in progress. The goals of this project are:
@@ -23,13 +28,11 @@ This project is a work in progress. The goals of this project are:
 - To serve as a supplement to the Machine Learning and Artificial Intelligence course that I am taking at Texas A&M University - San Antonio.
 - To improve my Zig skills.
 
-**For now, this project is not in development. I've run into issues with the type system that I must first learn to resolve.**
-
 ## Usage
 
 ### Prerequisites
 
-- [Zig](https://ziglang.org/) >= 0.11.0
+- [Zig](https://ziglang.org/) >= 0.11.0 (latest stable release, 0.11.0 is what is known to work)
 - [train-images-idx3-ubyte.gz](https://github.com/zalandoresearch/fashion-mnist/raw/master/data/fashion/train-images-idx3-ubyte.gz)
 - [train-labels-idx1-ubyte.gz](https://github.com/zalandoresearch/fashion-mnist/raw/master/data/fashion/train-labels-idx1-ubyte.gz)
 
@@ -42,20 +45,19 @@ The Fashion MNIST dataset is not included in this repository. You must download 
 
 The links to the files are provided in the [Prerequisites](#prerequisites) section.
 
-Next, run the following command to install the prerequisites for the data preparation script:
+Next, run the following commands to install the required Python packages and prepare the dataset:
 
 ```bash
+cd dataset
+# You're free to use a virtual environment if you'd like
 pip3 install -r requirements.txt
+python3 prepare.py train
 ```
 
-Finally, run the following command to prepare the data:
-
-```bash
-python3 download.py
-```
-
-This script currently extracts the compressed files into `numpy.ndarray` objects, prepends the labels to each image (row), and then saves the list of images to `fashion-mnist.csv` in the `dataset` directory.
+This script currently extracts the compressed files into `numpy.ndarray` objects, prepends the labels to each image (row), and then saves the list of images to `fashion-mnist-train.dataset` in the `dataset` directory.
 This is the file that the neural network will read from. Do not delete or modify this file.
+
+Additionally, `prepare.py` does take two options for its `mode` argument: `train` and `test`. The `train` mode is used to prepare the training data, and the `test` mode is used to prepare the testing data. The `test` mode is not yet confirmed to work, though it may.
 
 ## License
 
